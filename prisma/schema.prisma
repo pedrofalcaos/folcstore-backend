@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Perfil {
+  COMPRADOR
+  ARTESAO
+  ADMIN
+}
+
+enum TipoProduto {
+  UNICO
+  LOTE
+}
+
+model Usuario {
+  id        String    @id @default(uuid())
+  nome      String
+  email     String    @unique
+  senhaHash String
+  perfil    Perfil    @default(COMPRADOR)
+  criadoEm  DateTime  @default(now())
+  produtos  Produto[]
+  pedidos   Pedido[]
+}
+
+model Categoria {
+  id       String    @id @default(uuid())
+  nome     String    @unique
+  produtos Produto[]
+}
+
+model Produto {
+  id                String      @id @default(uuid())
+  titulo            String
+  descricao         String
+  tecnica           String
+  regiaoProducao    String
+  precoCentavos     Int
+  quantidadeEstoque Int
+  tipo              TipoProduto @default(LOTE)
+  ativo             Boolean     @default(true)
+  criadoEm          DateTime    @default(now())
+  atualizadoEm      DateTime    @updatedAt
+  categoriaId       String
+  categoria         Categoria   @relation(fields: [categoriaId], references: [id])
+  idArtesao         String
+  artesao           Usuario     @relation(fields: [idArtesao], references: [id])
+  itensPedido       ItemPedido[]
+
+  @@index([idArtesao])
+  @@index([categoriaId, ativo])
+}
+
+// Estrutura inicial da US01. Fluxo de compra será implementado na US04.
+model Pedido {
+  id            String       @id @default(uuid())
+  compradorId   String
+  comprador     Usuario      @relation(fields: [compradorId], references: [id])
+  totalCentavos Int
+  status        String       @default("PENDENTE")
+  criadoEm      DateTime     @default(now())
+  itens         ItemPedido[]
+}
+
+model ItemPedido {
+  id                    String  @id @default(uuid())
+  pedidoId              String
+  pedido                Pedido  @relation(fields: [pedidoId], references: [id])
+  produtoId             String
+  produto               Produto @relation(fields: [produtoId], references: [id])
+  quantidade            Int
+  precoUnitarioCentavos Int
+}
