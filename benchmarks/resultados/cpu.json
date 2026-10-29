@@ -1,0 +1,89 @@
+{
+  "ambiente": {
+    "data": "2026-10-28T21:21:42.433786-03:00",
+    "python": "3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)]",
+    "sistema": "Windows-11-10.0.26300-SP0",
+    "processador": "AMD64 Family 23 Model 104 Stepping 1, AuthenticAMD",
+    "cpus_logicas": 16,
+    "workers": 4,
+    "repeticoes": 5,
+    "semente": 42,
+    "descricao_palavras": 12,
+    "limite_recomendacoes": 4,
+    "comando": "benchmarks/recomendacoes.py --sizes 16 128 384 --workers 4 --repetitions 5"
+  },
+  "resultados": [
+    {
+      "produtos": 16,
+      "medianas_segundos": {
+        "sequencial": 0.07976670000061858,
+        "paralelo": 0.02452639999683015,
+        "paralelo_frio": 0.3078356999976677
+      },
+      "speedup": 3.25227917716941,
+      "speedup_frio": 0.2591210181314998,
+      "min_max_segundos": {
+        "sequencial": [
+          0.0789398999986588,
+          0.0813209000043571
+        ],
+        "paralelo": [
+          0.0236600999996881,
+          0.026600400000461377
+        ],
+        "paralelo_frio": [
+          0.30023919999803184,
+          0.36760420000064187
+        ]
+      }
+    },
+    {
+      "produtos": 128,
+      "medianas_segundos": {
+        "sequencial": 4.5054014999986975,
+        "paralelo": 1.2504120000012335,
+        "paralelo_frio": 1.6678228000018862
+      },
+      "speedup": 3.6031336071584827,
+      "speedup_frio": 2.7013670157246934,
+      "min_max_segundos": {
+        "sequencial": [
+          4.50160219999816,
+          4.515067100001033
+        ],
+        "paralelo": [
+          1.189231699994707,
+          1.2923488000014913
+        ],
+        "paralelo_frio": [
+          1.5723798000035458,
+          1.8518133999968995
+        ]
+      }
+    },
+    {
+      "produtos": 384,
+      "medianas_segundos": {
+        "sequencial": 42.60702100000344,
+        "paralelo": 17.76044090000505,
+        "paralelo_frio": 16.980880800001614
+      },
+      "speedup": 2.3989844193559025,
+      "speedup_frio": 2.5091172537998965,
+      "min_max_segundos": {
+        "sequencial": [
+          40.190769199994975,
+          42.85288089999813
+        ],
+        "paralelo": [
+          11.339712100001634,
+          18.5899408999976
+        ],
+        "paralelo_frio": [
+          16.74569530000008,
+          17.491062600005534
+        ]
+      }
+    }
+  ]
+}

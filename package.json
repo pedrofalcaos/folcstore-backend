@@ -11,7 +11,10 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "test": "tsx --test tests/api.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "recommender": "python services/recomendador/server.py --workers 4",
+    "benchmark:cpu": "python benchmarks/recomendacoes.py",
+    "benchmark:http": "python benchmarks/carga_http.py"
   },
   "engines": {
     "node": ">=22.12.0"

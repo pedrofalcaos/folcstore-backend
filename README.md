@@ -1,5 +1,12 @@
 # FolcStore Backend
 
+## Entrega da Unidade 2
+
+Arquitetura distribuída, processamento paralelo e benchmark implementados.
+Leia [como executar](docs/execucao-u2.md), o [diagrama e justificativas](docs/arquitetura-u2.md)
+e o [relatório de desempenho](docs/desempenho-u2.md). As amostras brutas ficam em
+`benchmarks/resultados/`. O restante deste README descreve a base inicial.
+
 Primeira entrega do backend, pensada para estudar e evoluir em pequenas etapas.
 Usa **Node.js + TypeScript + Express 5 + Prisma + SQLite + JWT**.
 SQLite é um banco relacional em arquivo: você não precisa instalar PostgreSQL para começar.
@@ -17,7 +24,7 @@ validados com essas versões.
 | US03 — catálogo e gestão | Núcleo implementado: filtros, paginação, detalhe, criação, atualização e exclusão lógica |
 | US03 — complemento: pedidos recebidos pelo artesão | Pendente; depende da US04 |
 | US04 — carrinho e pedidos | Pendente; há apenas as tabelas iniciais de pedidos |
-| US05 — integração BentoML | Pendente |
+| US05 — recomendações | Serviço Python HTTP implementado na U2; adaptador para BentoML original pendente |
 | US06 — Redis e filas | Pendente |
 | US07 — cache, Swagger e indicadores administrativos | Pendente; README e variáveis já preparados |
 
@@ -201,7 +208,9 @@ Este backend usa `/api/produtos`, preços em centavos, paginação e login POST 
 Trocar somente a variável de URL não basta: os services e os tipos do frontend
 precisarão ser adaptados. As demais rotas de pedidos e endereços ainda não existem aqui.
 O BentoML também não está conectado nesta entrega; seus IDs de demonstração precisam
-ser alinhados aos produtos do banco na US05.
+ser alinhados aos produtos do banco caso a equipe opte por usá-lo. A U2 acrescenta
+um serviço Python autocontido na porta 3004, que recebe os UUIDs reais do banco.
+Ele não depende do BentoML da porta 3002. Veja `docs/arquitetura-u2.md`.
 
 ## Próximas pequenas entregas
 

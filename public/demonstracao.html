@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>FolcStore — recomendações</title>
+<style>body{font:18px system-ui;max-width:850px;margin:50px auto;padding:0 24px;background:#faf7f2;color:#30271f}select,button{padding:12px;font:inherit;max-width:100%}button{background:#80512c;color:white;border:0;cursor:pointer}article{padding:18px;margin:12px 0;background:white;border:1px solid #dccfbd;border-radius:8px}small{color:#665}#estado{min-height:30px}</style>
+<h1>Peças que combinam</h1><p>Escolha uma peça do catálogo para descobrir sugestões de artesanato.</p>
+<label for="produto">Peça de referência</label><p><select id="produto"></select> <button id="buscar">Ver sugestões</button></p>
+<p id="estado" role="status"></p><section id="itens"></section>
+<p><small>Demonstração da Unidade 2: navegador → Express → serviço Python de recomendações.</small></p>
+<script>
+const select=document.querySelector('#produto'),estado=document.querySelector('#estado'),itens=document.querySelector('#itens'),botao=document.querySelector('#buscar');
+const moeda=new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+async function json(url){const r=await fetch(url);const data=await r.json();if(!r.ok)throw Error(data.erro||'Não foi possível carregar');return data;}
+async function carregar(){try{let pagina=1,total=1;do{const r=await json('/api/produtos?limite=50&pagina='+pagina);for(const p of r.dados){if(p.quantidadeEstoque<1)continue;const o=document.createElement('option');o.value=p.id;o.textContent=p.titulo;select.append(o);}total=r.totalPaginas;pagina++;}while(pagina<=total);if(!select.options.length){estado.textContent='Cadastre produtos disponíveis para começar.';botao.disabled=true;}}catch(e){estado.textContent=e.message;}}
+botao.onclick=async()=>{botao.disabled=true;itens.replaceChildren();estado.textContent='Buscando sugestões…';try{const r=await json('/api/recomendacoes?produtoId='+encodeURIComponent(select.value));for(const item of r.resultados[0].itens){const card=document.createElement('article'),titulo=document.createElement('h2'),texto=document.createElement('p');titulo.textContent=item.produto.titulo;texto.textContent=item.produto.regiaoProducao+' · '+moeda.format(item.produto.precoCentavos/100);card.append(titulo,texto);itens.append(card);}estado.textContent=r.resultados[0].itens.length?'Sugestões encontradas.':'Ainda não há outras peças disponíveis.';}catch(e){estado.textContent=e.message;}finally{botao.disabled=false;}};
+carregar();
+</script></html>

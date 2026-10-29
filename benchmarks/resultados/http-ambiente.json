@@ -1,0 +1,13 @@
+{
+  "data": "2026-10-28T21:22:12.187061-03:00",
+  "sistema": "Windows-11-10.0.26300-SP0",
+  "python": "3.13.7 (tags/v3.13.7:bcee1c3, Aug 14 2025, 14:15:11) [MSC v.1944 64 bit (AMD64)]",
+  "base": "http://127.0.0.1:3003/api",
+  "repeticoes_por_cenario": 1,
+  "concorrencias": [
+    1,
+    4
+  ],
+  "catalogo_produtos": 3,
+  "comando": "benchmarks/carga_http.py"
+}
