@@ -1,5 +1,9 @@
 # Unidade 2 — arquitetura distribuída (critério 2.4)
 
+Atualização posterior à medição U2: o fluxo de compra do Next.js agora se comunica
+com o Express e usa checkout transacional. Veja `compra-local.md`. O diagrama e
+as limitações abaixo descrevem a entrega U2 original, preservada como evidência.
+
 ## Serviços e comunicação implementados
 
 ```mermaid

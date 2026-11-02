@@ -1,12 +1,40 @@
 import { Router } from 'express';
+import * as compra from '../controllers/compra.controller';
 import { recomendar, recomendarLote } from '../controllers/recomendacao.controller';
 import rateLimit from 'express-rate-limit';
 import * as auth from '../controllers/auth.controller';
 import * as produto from '../controllers/produto.controller';
 import { autenticar, permitirPerfis } from '../middlewares/auth.middleware';
 import { prisma } from '../config/prisma';
+import { z } from 'zod';
 
 export const routes = Router();
+const comprador = [autenticar, permitirPerfis('COMPRADOR')];
+routes.get('/carrinho', ...comprador, compra.buscarCarrinho);
+routes.put('/carrinho/itens/:produtoId', ...comprador, compra.definirItem);
+routes.delete('/carrinho/itens/:produtoId', ...comprador, compra.removerItem);
+routes.delete('/carrinho', ...comprador, compra.limparCarrinho);
+routes.post('/pedidos', ...comprador, compra.checkout);
+routes.get('/pedidos', ...comprador, compra.pedidos);
+routes.get('/artesao/pedidos', autenticar, permitirPerfis('ARTESAO'), async (req, res) => {
+  res.json(await prisma.pedido.findMany({ where: { itens: { some: { idArtesao: req.usuario!.id } } },
+    include: { itens: { where: { idArtesao: req.usuario!.id } }, comprador: { select: { nome: true } } },
+    orderBy: { criadoEm: 'desc' }, take: 100 }));
+});
+routes.get('/admin/pedidos', autenticar, permitirPerfis('ADMIN'), async (_req, res) => {
+  res.json(await prisma.pedido.findMany({ include: { itens: true, comprador: { select: { nome: true } } }, orderBy: { criadoEm: 'desc' }, take: 100 }));
+});
+routes.get('/artesaos', async (_req, res) => {
+  res.json(await prisma.usuario.findMany({ where: { perfil: 'ARTESAO' }, select: { id: true, nome: true } }));
+});
+routes.get('/artesaos/:id', async (req, res) => {
+  const usuario = await prisma.usuario.findFirst({ where: { id: z.string().uuid().parse(req.params.id), perfil: 'ARTESAO' }, select: { id: true, nome: true } });
+  if (!usuario) { res.status(404).json({ erro: 'Artesão não encontrado' }); return; }
+  res.json(usuario);
+});
+routes.get('/enderecos', ...comprador, compra.enderecos);
+routes.post('/enderecos', ...comprador, compra.adicionarEndereco);
+routes.delete('/enderecos/:id', ...comprador, compra.removerEndereco);
 const limiteAuth = rateLimit({
   windowMs: 15 * 60 * 1000, limit: 30,
   standardHeaders: 'draft-8', legacyHeaders: false,

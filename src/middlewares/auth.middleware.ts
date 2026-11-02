@@ -9,7 +9,7 @@ import { AppError } from '../errors/AppError';
 declare global {
   namespace Express {
     interface Request {
-      usuario?: { id: string; nome: string; email: string; perfil: Perfil };
+      usuario?: ReturnType<typeof usuarioPublico>;
     }
   }
 }

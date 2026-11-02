@@ -1,17 +1,18 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { Usuario } from '@prisma/client';
+import { Usuario, Endereco } from '@prisma/client';
 import { z } from 'zod';
 import { env } from '../config/env';
 import { AppError } from '../errors/AppError';
 import { usuarioRepository } from '../repositories/usuario.repository';
 import { registerSchema, loginSchema } from '../validators/auth.schema';
 
-export function usuarioPublico(usuario: Usuario) {
-  return { id: usuario.id, nome: usuario.nome, email: usuario.email, perfil: usuario.perfil };
+export function usuarioPublico(usuario: Usuario & { enderecos?: Endereco[] }) {
+  return { id: usuario.id, nome: usuario.nome, email: usuario.email, perfil: usuario.perfil,
+    cpf: usuario.cpf ?? '', telefone: usuario.telefone, enderecos: usuario.enderecos ?? [] };
 }
 
-function criarSessao(usuario: Usuario) {
+function criarSessao(usuario: Usuario & { enderecos?: Endereco[] }) {
   const token = jwt.sign({}, env.JWT_SECRET, {
     subject: usuario.id, expiresIn: '1h', algorithm: 'HS256',
     issuer: 'folcstore-backend', audience: 'folcstore',
@@ -24,9 +25,9 @@ export const authService = {
     if (await usuarioRepository.buscarPorEmail(dados.email)) {
       throw new AppError(409, 'E-mail já cadastrado');
     }
-    const { senha, ...perfil } = dados;
+    const { senha, enderecos, ...perfil } = dados;
     const senhaHash = await bcrypt.hash(senha, 12);
-    return criarSessao(await usuarioRepository.criar({ ...perfil, senhaHash }));
+    return criarSessao(await usuarioRepository.criar({ ...perfil, senhaHash, enderecos: { create: enderecos } }));
   },
 
   async entrar(dados: z.infer<typeof loginSchema>) {

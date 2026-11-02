@@ -25,6 +25,11 @@ Não se afirma ganho percentual de tempo sem uma nova rodada de benchmark.
 
 ## Pendências que exigem implementação de funcionalidade
 
+Atualização da etapa de compra local: os itens 1 e 2 abaixo foram resolvidos para
+cadastro/login e compra com Express. Carrinho persistido, transação, idempotência
+e integração estão descritos em `compra-local.md`. O texto abaixo registra o
+diagnóstico histórico que motivou essa implementação.
+
 1. O checkout principal ainda cria pedidos e baixa estoque em requisições separadas
    ao json-server. Transação no backend, validação de preço/estoque e idempotência
    são necessárias para impedir vendas simultâneas da última unidade e duplicação

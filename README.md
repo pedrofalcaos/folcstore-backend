@@ -1,5 +1,12 @@
 # FolcStore Backend
 
+## Compra local integrada
+
+Carrinho persistido, endereços, checkout transacional, idempotência e histórico
+estão implementados e integrados ao frontend. Veja [execução e evidências](docs/compra-local.md).
+Cadastros do frontend agora usam JWT do Express; contas antigas do json-server
+precisam ser cadastradas ou migradas para este banco.
+
 ## Entrega da Unidade 2
 
 Arquitetura distribuída, processamento paralelo e benchmark implementados.
@@ -22,8 +29,8 @@ validados com essas versões.
 | US01 — estrutura, banco e seed | Implementada; usuários, categorias, produtos, pedidos e itens modelados |
 | US02 — cadastro, login e perfis | Implementada; JWT de 1 hora, hash bcrypt e proteção por perfil |
 | US03 — catálogo e gestão | Núcleo implementado: filtros, paginação, detalhe, criação, atualização e exclusão lógica |
-| US03 — complemento: pedidos recebidos pelo artesão | Pendente; depende da US04 |
-| US04 — carrinho e pedidos | Pendente; há apenas as tabelas iniciais de pedidos |
+| US03 — complemento: pedidos recebidos pelo artesão | Consulta protegida implementada; envio/rastreio pendentes |
+| US04 — carrinho e pedidos | Implementada na etapa local: persistência, checkout transacional e histórico |
 | US05 — recomendações | Serviço Python HTTP implementado na U2; adaptador para BentoML original pendente |
 | US06 — Redis e filas | Pendente |
 | US07 — cache, Swagger e indicadores administrativos | Pendente; README e variáveis já preparados |
@@ -202,11 +209,12 @@ Para executar a versão compilada: `npm start` depois de `npm run build`.
 | Recomendador BentoML | 3002 |
 | Este backend Express | 3003 |
 
-Esta entrega **ainda não substitui o json-server no frontend**. O frontend atual
+Na versão inicial, o frontend
 usa `/products`, preços em reais e login simulado por consulta de e-mail/senha.
 Este backend usa `/api/produtos`, preços em centavos, paginação e login POST com JWT.
 Trocar somente a variável de URL não basta: os services e os tipos do frontend
-precisarão ser adaptados. As demais rotas de pedidos e endereços ainda não existem aqui.
+precisavam ser adaptados. A etapa de compra local já implementou essa adaptação,
+incluindo pedidos e endereços; veja `docs/compra-local.md` para o contrato atual.
 O BentoML também não está conectado nesta entrega; seus IDs de demonstração precisam
 ser alinhados aos produtos do banco caso a equipe opte por usá-lo. A U2 acrescenta
 um serviço Python autocontido na porta 3004, que recebe os UUIDs reais do banco.
@@ -214,9 +222,9 @@ Ele não depende do BentoML da porta 3002. Veja `docs/arquitetura-u2.md`.
 
 ## Próximas pequenas entregas
 
-1. Adaptar login e catálogo do frontend ao contrato desta API.
-2. US04: carrinho persistido, criação de pedido e baixa de estoque em transação.
-3. Complemento US03: listar pedidos recebidos por artesão.
+1. Swagger/OpenAPI dos endpoints finais e documentação do deploy.
+2. Publicação com banco adequado ao ambiente e revisão da estratégia de bloqueio.
+3. Complemento US03: fluxo de envio/rastreio e confirmação de recebimento.
 4. US05: integrar BentoML e definir correspondência de IDs e fallback.
 5. US06: Redis/BullMQ e job de confirmação de pedido.
 6. US07: Swagger, cache com invalidação e indicadores administrativos.
