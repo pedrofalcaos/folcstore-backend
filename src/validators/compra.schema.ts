@@ -7,7 +7,7 @@ export const enderecoSchema = z.object({
   bairro: z.string().trim().min(2).max(100),
   complemento: z.string().trim().max(100).default(''),
   cidade: z.string().trim().min(2).max(100),
-  estado: z.string().trim().toUpperCase().regex(/^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$/),
+  estado: z.string().trim().toUpperCase().regex(/^(AC|AL|AP|AM|BA|CE|DF|ES|GO|MA|MT|MS|MG|PA|PB|PR|PE|PI|RJ|RN|RS|RO|RR|SC|SP|SE|TO)$/, 'Informe uma UF válida, como PE.'),
 }).strict();
 
 export const itemCarrinhoSchema = z.object({

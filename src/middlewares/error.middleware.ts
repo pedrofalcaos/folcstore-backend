@@ -5,7 +5,9 @@ import { AppError } from '../errors/AppError';
 
 export const errorMiddleware: ErrorRequestHandler = (error, _req, res, _next) => {
   if (error instanceof ZodError) {
-    res.status(400).json({ erro: 'Dados inválidos', detalhes: error.flatten() });
+    res.status(400).json({ erro: 'Dados inválidos', detalhes: error.flatten(),
+      campos: error.issues.map(issue => ({ campo: issue.path.join('.'), mensagem: issue.message })),
+    });
     return;
   }
   if (error instanceof AppError) {

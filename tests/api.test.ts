@@ -67,7 +67,8 @@ test('US02: cadastro, perfis e senha armazenada com hash', async () => {
 
 test('US02: rejeita admin público, senha curta e e-mail duplicado', async () => {
   await request(app).post('/api/auth/register').send({ nome: 'Admin', email: 'admin@example.com', senha, perfil: 'ADMIN' }).expect(400);
-  await request(app).post('/api/auth/register').send({ nome: 'Teste', email: 'teste@example.com', senha: '123' }).expect(400);
+  const invalido = await request(app).post('/api/auth/register').send({ nome: 'Teste', email: 'teste@example.com', senha: '123' }).expect(400);
+  assert.ok(invalido.body.campos.some((campo: { campo: string; mensagem: string }) => campo.campo === 'senha' && campo.mensagem.includes('8 caracteres')));
   await request(app).post('/api/auth/register').send({ nome: 'Outro', email: ' ARTESAO@example.com ', senha }).expect(409);
 });
 
