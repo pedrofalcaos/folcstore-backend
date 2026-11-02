@@ -10,6 +10,9 @@ maior = max(cpu['resultados'], key=lambda r: r['produtos'])
 faixa = maior['min_max_segundos']['paralelo']
 falhas_http = [(r['cenario'], r['concorrencia'], r['erros']) for r in http if r['erros']]
 linhas = ['# Unidade 2 — avaliação de desempenho (critérios 2.1 e 1.5)', '',
+          '> Os arquivos em benchmarks/resultados/ desta entrega são uma linha de base',
+          '> do commit f8a32bc, anterior à otimização top-k. Ao reproduzir, registre',
+          '> a revisão e a origem das novas amostras; veja docs/code-review.md.', '',
           '## Ambiente e escopo', '',
           f"Data de conclusão da medição CPU: {ambiente['data']}.",
           f"Sistema: {ambiente['sistema']}. Python: {ambiente['python']}.",

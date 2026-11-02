@@ -1,8 +1,16 @@
 import unittest
-from core import criar_pool, paralelo, sequencial
+from core import candidatos, criar_pool, paralelo, sequencial
 
 
 class RankingTest(unittest.TestCase):
+    def test_top_k_equivale_a_ordenacao_completa_inclusive_empates(self):
+        produtos = [dict(id=str(i), descricao='Peça artesanal', tecnica='barro',
+                         regiaoProducao='Olinda') for i in range(17)]
+        for limite in [0, 1, 4, 30]:
+            for origem in produtos:
+                esperado = sorted(candidatos(produtos, origem), key=lambda p: (-p['score'], p['produtoId']))[:limite]
+                self.assertEqual(sequencial(produtos, [origem['id']], limite)[0]['itens'], esperado)
+
     def test_equivalencia_e_exclusao_da_origem(self):
         produtos = [dict(id=str(i), descricao='Peça artesanal de barro ' + str(i),
                          tecnica='barro' if i % 2 else 'madeira', regiaoProducao='Olinda') for i in range(12)]

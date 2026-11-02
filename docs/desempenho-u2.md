@@ -1,5 +1,9 @@
 # Unidade 2 — avaliação de desempenho (critérios 2.1 e 1.5)
 
+> Linha de base medida no commit `f8a32bc`, antes da otimização top-k desta revisão.
+> As amostras históricas foram preservadas. Estes tempos não medem a versão atual;
+> veja `code-review.md` para as mudanças e como executar uma nova rodada.
+
 ## Ambiente e escopo
 
 Data de conclusão da medição CPU: 2026-10-28T21:21:42.433786-03:00.
