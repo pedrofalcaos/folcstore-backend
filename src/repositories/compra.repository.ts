@@ -6,11 +6,11 @@ export const incluirProduto = {
   produto: { include: { categoria: true, artesao: { select: { id: true, nome: true } } } },
 };
 
-// Adquire o bloqueio de escrita ANTES de ler o estoque/carrinho no SQLite.
-// O banco serializa as escritas, inclusive entre processos diferentes da API.
+// Bloqueia as escritas no SQLite e a linha do comprador no PostgreSQL.
+// O bloqueio vem antes das leituras do carrinho.
 export async function transacaoCompra<T>(compradorId: string, operacao: (db: BancoCompra) => Promise<T>) {
   return prisma.$transaction(async db => {
-    await db.$executeRaw`UPDATE Usuario SET id = id WHERE id = ${compradorId}`;
+    await db.$executeRaw`UPDATE "Usuario" SET "id" = "id" WHERE "id" = ${compradorId}`;
     return operacao(db);
   }, { maxWait: 10000, timeout: 15000 });
 }

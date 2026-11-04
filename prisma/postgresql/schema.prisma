@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+enum Perfil {
+  COMPRADOR
+  ARTESAO
+  ADMIN
+}
+
+enum TipoProduto {
+  UNICO
+  LOTE
+}
+
+model Usuario {
+  id        String    @id @default(uuid())
+  nome      String
+  email     String    @unique
+  senhaHash String
+  perfil    Perfil    @default(COMPRADOR)
+  criadoEm  DateTime  @default(now())
+  cpf       String?   @unique
+  telefone  String    @default("")
+  versaoCarrinho Int  @default(0)
+  enderecos Endereco[]
+  carrinho  ItemCarrinho[]
+  produtos  Produto[]
+  pedidos   Pedido[]
+}
+
+model Categoria {
+  id       String    @id @default(uuid())
+  nome     String    @unique
+  produtos Produto[]
+}
+
+model Produto {
+  id                String      @id @default(uuid())
+  titulo            String
+  descricao         String
+  tecnica           String
+  regiaoProducao    String
+  precoCentavos     Int
+  quantidadeEstoque Int
+  tipo              TipoProduto @default(LOTE)
+  ativo             Boolean     @default(true)
+  criadoEm          DateTime    @default(now())
+  atualizadoEm      DateTime    @updatedAt
+  categoriaId       String
+  categoria         Categoria   @relation(fields: [categoriaId], references: [id])
+  idArtesao         String
+  artesao           Usuario     @relation(fields: [idArtesao], references: [id])
+  itensPedido       ItemPedido[]
+  itensCarrinho     ItemCarrinho[]
+  sku               String @default("")
+  materiaPrima      String @default("")
+  guiaCuidados      String @default("")
+  prazoProducao     Int @default(0)
+  dimensoes         Json @default("{}")
+  galeriaImagens    Json @default("[]")
+
+  @@index([idArtesao])
+  @@index([categoriaId, ativo])
+}
+
+model Endereco {
+  id String @id @default(uuid())
+  usuarioId String
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  cep String
+  rua String
+  numero String
+  bairro String
+  complemento String @default("")
+  cidade String
+  estado String
+  @@index([usuarioId])
+}
+
+model ItemCarrinho {
+  compradorId String
+  comprador Usuario @relation(fields: [compradorId], references: [id])
+  produtoId String
+  produto Produto @relation(fields: [produtoId], references: [id])
+  quantidade Int
+  @@id([compradorId, produtoId])
+}
+
+model Pedido {
+  id            String       @id @default(uuid())
+  compradorId   String
+  comprador     Usuario      @relation(fields: [compradorId], references: [id])
+  totalCentavos Int
+  status        String       @default("PENDENTE")
+  criadoEm      DateTime     @default(now())
+  itens         ItemPedido[]
+  chaveIdempotencia String?
+  solicitacaoHash String?
+  enderecoEntrega Json @default("{}")
+  metodoPagamento String @default("PIX")
+  @@unique([compradorId, chaveIdempotencia])
+  @@index([compradorId, criadoEm])
+}
+
+model ItemPedido {
+  id                    String  @id @default(uuid())
+  pedidoId              String
+  pedido                Pedido  @relation(fields: [pedidoId], references: [id])
+  produtoId             String
+  produto               Produto @relation(fields: [produtoId], references: [id])
+  quantidade            Int
+  precoUnitarioCentavos Int
+  tituloProduto String @default("")
+  idArtesao String @default("")
+}

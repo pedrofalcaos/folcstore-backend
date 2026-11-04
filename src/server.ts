@@ -4,8 +4,8 @@ import { prisma } from './config/prisma';
 
 async function iniciar() {
   await prisma.$connect();
-  const server = app.listen(env.PORT, '127.0.0.1', () => {
-    console.log(`FolcStore backend: http://localhost:${env.PORT}/api/health`);
+  const server = app.listen(env.PORT, env.HOST, () => {
+    console.log(`FolcStore backend escutando em ${env.HOST}:${env.PORT} (/api/health)`);
   });
   server.on('error', async error => {
     console.error('Não foi possível iniciar o servidor:', error.message);
