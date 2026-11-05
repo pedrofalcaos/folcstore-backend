@@ -4,11 +4,17 @@ import cors from 'cors';
 import { env } from './config/env';
 import { routes } from './routes';
 import { errorMiddleware } from './middlewares/error.middleware';
+import fs from 'node:fs';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yaml';
 
 export const app = express();
 app.disable('x-powered-by');
 app.use(cors({ origin: env.FRONTEND_URL }));
 app.use(express.json({ limit: '100kb' }));
+const file = fs.readFileSync(path.resolve('docs/openapi.yaml'), 'utf8');
+const swaggerDocument = YAML.parse(file);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api', routes);
 app.get('/demonstracao', (_req, res) => { res.sendFile(path.resolve('public/demonstracao.html')); });
 app.use((_req, res) => { res.status(404).json({ erro: 'Rota não encontrada' }); });

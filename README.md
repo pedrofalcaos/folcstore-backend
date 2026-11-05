@@ -33,7 +33,7 @@ validados com essas versões.
 | US04 — carrinho e pedidos | Implementada na etapa local: persistência, checkout transacional e histórico |
 | US05 — recomendações | Serviço Python HTTP implementado na U2; adaptador para BentoML original pendente |
 | US06 — Redis e filas | Pendente |
-| US07 — cache, Swagger e indicadores administrativos | Pendente; README e variáveis já preparados |
+| US07 — cache, Swagger e indicadores administrativos | Swagger implementado (`/api-docs`); cache e indicadores pendentes |
 
 O cadastro público permite COMPRADOR e ARTESAO. ADMIN é criado pelo seed local;
 não há ainda painel nem endpoints de indicadores. O middleware permite restringir novas rotas por qualquer um dos três perfis.
@@ -83,6 +83,46 @@ Contas fictícias do seed, todas com a senha definida no seu `.env`:
 | admin@example.com | ADMIN |
 
 Para visualizar os registros: `npm run db:studio`.
+## Variáveis de ambiente
+
+As variáveis ficam no arquivo `.env` (criado a partir do `.env.example`). Ele não vai para o Git, então cada pessoa do time cria o seu.
+
+| Variável | Para que serve | Obrigatória | Exemplo |
+| --- | --- | --- | --- |
+| `PORT` | Porta em que a API escuta | Não (padrão 3003) | `3003` |
+| `HOST` | Endereço em que a API escuta | Não (padrão 127.0.0.1) | `127.0.0.1` |
+| `DATABASE_URL` | Caminho do banco SQLite | Sim | `"file:./dev.db"` |
+| `JWT_SECRET` | Chave que assina os tokens de login (mínimo 32 caracteres) | Sim | gerada com o comando abaixo |
+| `FRONTEND_URL` | Endereço do frontend liberado no CORS (só ele pode chamar a API pelo navegador) | Não (padrão http://localhost:3000) | `http://localhost:3000` |
+| `RECOMMENDER_URL` | Endereço do serviço Python de recomendações | Não (padrão http://127.0.0.1:3004) | `http://127.0.0.1:3004` |
+| `RECOMMENDER_TIMEOUT_MS` | Tempo máximo de espera pelo recomendador, em milissegundos (100 a 120000) | Não (padrão 15000) | `15000` |
+| `SEED_PASSWORD` | Senha das contas fictícias criadas pelo seed (mínimo 8 caracteres) | Só para `npm run db:seed` | uma senha de teste |
+
+Para gerar o `JWT_SECRET`:
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Nunca publique o `.env`, nem o `JWT_SECRET` ou o `SEED_PASSWORD`.
+
+## Documentação da API (Swagger)
+
+A API tem documentação interativa (Swagger UI) com todas as rotas, descrita no arquivo `docs/openapi.yaml`.
+
+1. Rode `npm run dev`.
+2. Abra http://localhost:3003/api-docs
+3. Clique em uma rota, depois em **Try it out** e em **Execute** para testar.
+
+Para as rotas com cadeado (que exigem login):
+
+1. Faça login em `POST /api/auth/login` (ou cadastre-se em `POST /api/auth/register`) e copie o `token` da resposta.
+2. Clique em **Authorize** no topo da página, cole o token e confirme.
+3. O token vale por 1 hora. Depois disso, faça login de novo.
+
+Cada rota só funciona para o perfil certo (COMPRADOR, ARTESAO ou ADMIN). Com o perfil errado a resposta é 403.
+
+O Swagger é montado em `src/app.ts` com o pacote `swagger-ui-express`. O arquivo `docs/openapi.yaml` é lido quando o servidor inicia, então reinicie o servidor depois de editá-lo. Ao criar ou mudar uma rota, atualize esse arquivo junto.
 
 ## Arquitetura simples
 
@@ -141,6 +181,8 @@ DELETE marca o produto como inativo e o oculta da consulta pública.
 | POST | /api/produtos | ARTESAO |
 | PUT | /api/produtos/:id | ARTESAO dono do produto; corpo completo |
 | DELETE | /api/produtos/:id | ARTESAO dono do produto |
+
+A tabela acima lista as rotas da base inicial. A lista completa (carrinho, endereços, pedidos e recomendações) está no Swagger, em `/api-docs`.
 
 Filtros de GET `/api/produtos`: `busca` (título/descrição), `categoriaId`, `tecnica`,
 `regiao`, `idArtesao`, `pagina` (padrão 1) e `limite` (padrão 12, máximo 50).
@@ -222,12 +264,12 @@ Ele não depende do BentoML da porta 3002. Veja `docs/arquitetura-u2.md`.
 
 ## Próximas pequenas entregas
 
-1. Swagger/OpenAPI dos endpoints finais e documentação do deploy.
+1. Documentação do deploy. (O Swagger/OpenAPI já está em `/api-docs`; atualize o `docs/openapi.yaml` se as rotas finais mudarem.)
 2. Publicação com banco adequado ao ambiente e revisão da estratégia de bloqueio.
 3. Complemento US03: fluxo de envio/rastreio e confirmação de recebimento.
 4. US05: integrar BentoML e definir correspondência de IDs e fallback.
 5. US06: Redis/BullMQ e job de confirmação de pedido.
-6. US07: Swagger, cache com invalidação e indicadores administrativos.
+6. US07: cache com invalidação e indicadores administrativos.
 
 PostgreSQL pode ser adotado quando a equipe precisar de um servidor compartilhado:
 essa mudança exige ajustar o provider, URL e migrations; não basta trocar a URL.

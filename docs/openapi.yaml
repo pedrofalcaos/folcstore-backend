@@ -1,0 +1,475 @@
+openapi: 3.0.3
+info:
+  title: FolcStore API
+  version: 1.0.0
+  description: Backend do FolcStore (Express + Prisma). Rotas protegidas usam token JWT (botão Authorize).
+servers:
+  - url: /
+tags:
+  - name: Autenticação
+  - name: Produtos
+  - name: Artesãos
+  - name: Carrinho
+  - name: Endereços
+  - name: Pedidos
+  - name: Recomendações
+  - name: Sistema
+
+paths:
+  /api/health:
+    get:
+      tags: [Sistema]
+      summary: Verifica se a API e o banco estão no ar
+      responses:
+        '200':
+          description: API no ar, banco conectado
+
+  /api/auth/register:
+    post:
+      tags: [Autenticação]
+      summary: Cadastra um comprador ou artesão
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, email, senha]
+              properties:
+                nome: { type: string, minLength: 2, maxLength: 100 }
+                email: { type: string, format: email }
+                senha: { type: string, minLength: 8, description: Mínimo de 8 caracteres (máximo 72 bytes) }
+                perfil: { type: string, enum: [COMPRADOR, ARTESAO], default: COMPRADOR }
+                cpf: { type: string, description: 11 dígitos }
+                telefone: { type: string }
+                enderecos:
+                  type: array
+                  maxItems: 10
+                  items: { $ref: '#/components/schemas/Endereco' }
+      responses:
+        '201':
+          description: Usuário criado (devolve o token e os dados do usuário)
+        '400':
+           description: Dados inválidos (e-mail ou senha fora do formato)
+        '409':
+          description: E-mail ou CPF já cadastrado
+
+  /api/auth/login:
+    post:
+      tags: [Autenticação]
+      summary: Faz login e devolve o token JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, senha]
+              properties:
+                email: { type: string, format: email }
+                senha: { type: string }
+      responses:
+        '200':
+          description: Login feito (devolve o token e os dados do usuário)
+        '401':
+          description: E-mail ou senha incorretos
+
+  /api/auth/me:
+    get:
+      tags: [Autenticação]
+      summary: Dados do usuário logado
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dados do usuário
+        '401':
+          description: Token ausente, inválido ou expirado
+
+  /api/categorias:
+    get:
+      tags: [Produtos]
+      summary: Lista as categorias de produto
+      responses:
+        '200':
+          description: Lista de categorias
+
+  /api/produtos:
+    get:
+      tags: [Produtos]
+      summary: Lista produtos com filtros e paginação
+      parameters:
+        - { name: pagina, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: limite, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 12 } }
+        - { name: busca, in: query, description: Busca por texto, schema: { type: string } }
+        - { name: categoriaId, in: query, schema: { type: string, format: uuid } }
+        - { name: tecnica, in: query, schema: { type: string } }
+        - { name: regiao, in: query, schema: { type: string } }
+        - { name: idArtesao, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Página de produtos (dados, pagina, limite, total, totalPaginas)
+        '400':
+          description: Filtro inválido
+    post:
+      tags: [Produtos]
+      summary: Cadastra um produto (só artesão)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProdutoEntrada' }
+      responses:
+        '201':
+          description: Produto criado
+        '400':
+          description: Dados inválidos
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Perfil sem acesso
+
+  /api/produtos/{id}:
+    parameters:
+      - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      tags: [Produtos]
+      summary: Busca um produto pelo id
+      responses:
+        '200':
+          description: Produto encontrado
+        '404':
+          description: Produto não encontrado
+    put:
+      tags: [Produtos]
+      summary: Atualiza um produto (só o artesão dono)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProdutoEntrada' }
+      responses:
+        '200':
+          description: Produto atualizado
+        '400':
+          description: Dados inválidos
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Perfil sem acesso
+        '404':
+          description: Produto não encontrado
+    delete:
+      tags: [Produtos]
+      summary: Remove um produto (só o artesão dono)
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Produto removido
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Perfil sem acesso
+        '404':
+          description: Produto não encontrado
+
+  /api/artesaos:
+    get:
+      tags: [Artesãos]
+      summary: Lista os artesãos (id e nome)
+      responses:
+        '200':
+          description: Lista de artesãos
+
+  /api/artesaos/{id}:
+    get:
+      tags: [Artesãos]
+      summary: Busca um artesão pelo id (id e nome)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: Artesão encontrado
+        '404':
+          description: Artesão não encontrado
+
+  /api/artesao/pedidos:
+    get:
+      tags: [Pedidos]
+      summary: Pedidos que contêm produtos do artesão logado (últimos 100)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de pedidos
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Só artesão
+
+  /api/admin/pedidos:
+    get:
+      tags: [Pedidos]
+      summary: Todos os pedidos (últimos 100, só admin)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de pedidos
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Só administrador
+
+  /api/carrinho:
+    get:
+      tags: [Carrinho]
+      summary: Carrinho do comprador (itens, versão, subtotais e total)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Carrinho atual
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Só comprador
+    delete:
+      tags: [Carrinho]
+      summary: Esvazia o carrinho
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Carrinho vazio
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Só comprador
+
+  /api/carrinho/itens/{produtoId}:
+    parameters:
+      - { name: produtoId, in: path, required: true, schema: { type: string, format: uuid } }
+    put:
+      tags: [Carrinho]
+      summary: Define a quantidade de um produto no carrinho
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantidade]
+              properties:
+                quantidade: { type: integer, minimum: 1, maximum: 99 }
+      responses:
+        '200':
+          description: Carrinho atualizado
+        '400':
+          description: Dados inválidos
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Só comprador
+    delete:
+      tags: [Carrinho]
+      summary: Remove um produto do carrinho
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Carrinho atualizado
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Só comprador
+
+  /api/enderecos:
+    get:
+      tags: [Endereços]
+      summary: Lista os endereços do comprador
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de endereços
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Só comprador
+    post:
+      tags: [Endereços]
+      summary: Adiciona um endereço (máximo de 20)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Endereco' }
+      responses:
+        '201':
+          description: Endereço criado
+        '400':
+          description: Dados inválidos
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Só comprador
+        '422':
+          description: Limite de 20 endereços
+
+  /api/enderecos/{id}:
+    delete:
+      tags: [Endereços]
+      summary: Remove um endereço do próprio comprador
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '204':
+          description: Endereço removido
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Só comprador
+        '404':
+          description: Endereço não encontrado
+
+  /api/pedidos:
+    get:
+      tags: [Pedidos]
+      summary: Pedidos do comprador logado (últimos 100)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de pedidos
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Só comprador
+    post:
+      tags: [Pedidos]
+      summary: Confirma o carrinho e cria o pedido (checkout)
+      description: Use os valores de versão e total do GET /api/carrinho. Repetir a mesma Idempotency-Key devolve o pedido já criado (200), sem descontar o estoque de novo.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, description: UUID que identifica esta tentativa de compra, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enderecoId, metodoPagamento, versaoCarrinho, totalEsperadoCentavos]
+              properties:
+                enderecoId: { type: string, format: uuid }
+                metodoPagamento: { type: string, enum: [PIX, CARTAO] }
+                versaoCarrinho: { type: integer, minimum: 0 }
+                totalEsperadoCentavos: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Pedido já criado antes com a mesma chave
+        '201':
+          description: Pedido criado
+        '400':
+          description: Dados inválidos ou cabeçalho ausente
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Só comprador
+        '409':
+          description: Estoque, preço ou versão do carrinho mudaram
+
+  /api/recomendacoes:
+    get:
+      tags: [Recomendações]
+      summary: Produtos recomendados a partir de um produto
+      parameters:
+        - { name: produtoId, in: query, required: true, schema: { type: string, format: uuid } }
+        - { name: limite, in: query, schema: { type: integer, minimum: 1, maximum: 20, default: 4 } }
+        - { name: modo, in: query, schema: { type: string, enum: [sequencial, paralelo], default: sequencial } }
+      responses:
+        '200':
+          description: Lista de recomendações
+        '400':
+          description: Parâmetro inválido
+
+  /api/recomendacoes/lote:
+    post:
+      tags: [Recomendações]
+      summary: Recomendações para os produtos do artesão logado
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                limite: { type: integer, minimum: 1, maximum: 20, default: 4 }
+                modo: { type: string, enum: [sequencial, paralelo], default: sequencial }
+      responses:
+        '200':
+          description: Recomendações geradas
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Só artesão
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Faça login em POST /api/auth/login e cole aqui o token que vier na resposta.
+  schemas:
+    Endereco:
+      type: object
+      required: [cep, rua, numero, bairro, cidade, estado]
+      properties:
+        cep: { type: string, example: 50000-001 }
+        rua: { type: string }
+        numero: { type: string }
+        bairro: { type: string }
+        complemento: { type: string }
+        cidade: { type: string }
+        estado: { type: string, description: Sigla da UF, example: PE }
+    ProdutoEntrada:
+      type: object
+      required: [titulo, descricao, tecnica, regiaoProducao, categoriaId, precoCentavos, quantidadeEstoque, tipo]
+      properties:
+        titulo: { type: string, minLength: 3, maxLength: 150 }
+        descricao: { type: string, minLength: 10, maxLength: 3000 }
+        tecnica: { type: string }
+        regiaoProducao: { type: string }
+        categoriaId: { type: string, format: uuid }
+        precoCentavos: { type: integer, minimum: 1, description: 'Preço em centavos (R$ 25,00 = 2500)' }
+        quantidadeEstoque: { type: integer, minimum: 0, description: Peça única só aceita 0 ou 1 }
+        tipo: { type: string, enum: [UNICO, LOTE] }
+        sku: { type: string }
+        materiaPrima: { type: string }
+        guiaCuidados: { type: string }
+        prazoProducao: { type: integer, minimum: 0, maximum: 365 }
+        dimensoes:
+          type: object
+          properties:
+            altura: { type: number }
+            largura: { type: number }
+            profundidade: { type: number }
+            peso: { type: number }
+        galeriaImagens:
+          type: array
+          maxItems: 10
+          items: { type: string }
