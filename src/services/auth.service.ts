@@ -13,10 +13,21 @@ export function usuarioPublico(usuario: Usuario & { enderecos?: Endereco[] }) {
 }
 
 function criarSessao(usuario: Usuario & { enderecos?: Endereco[] }) {
-  const token = jwt.sign({}, env.JWT_SECRET, {
-    subject: usuario.id, expiresIn: '1h', algorithm: 'HS256',
-    issuer: 'folcstore-backend', audience: 'folcstore',
-  });
+  const token = jwt.sign(
+    {
+      perfil: usuario.perfil,
+      nome: usuario.nome,
+      email: usuario.email,
+    },
+    env.JWT_SECRET,
+    {
+      subject: usuario.id,
+      expiresIn: '1h',
+      algorithm: 'HS256',
+      issuer: 'folcstore-backend',
+      audience: 'folcstore',
+    }
+  );
   return { token, usuario: usuarioPublico(usuario) };
 }
 
